@@ -4,5 +4,3 @@ __pycache__/
 /self-review-log.md
 /self-review-history.csv
 /self-review-trend.html
-# Owner decision 2026-10-25: the README stays local, not in the public repo.
-/README.md
