@@ -1,0 +1,4 @@
+# Copy to your knowledge-base folder. For search tools (ripgrep), not git: search inside core/
+# even though your private repo's .gitignore excludes it; without this, lookups can't see the
+# playbooks in core/.
+!core/

@@ -1,0 +1,6 @@
+# Words that must never appear in the shared repo (core/). One per line, case-insensitive.
+# Copy this file to your knowledge-base folder (next to core/, NOT inside it) and fill it in:
+# your names, email addresses, account names, project and company names, device serials,
+# store/app IDs, local paths (e.g. C:\Users\<you>, /Users/<you>), anything else personal.
+# The guard (tools/check_no_personal_data.py) blocks any commit or push that contains one.
+example-personal-term-replace-me

@@ -1,0 +1,6 @@
+# Copy to your knowledge-base folder (your PRIVATE repo).
+# core/ is the shared repo, nested here: never add it to the private repo.
+core/
+# Rebuilt by core/tools/benchmark_summary.py on every run.
+self-review-trend.html
+__pycache__/
