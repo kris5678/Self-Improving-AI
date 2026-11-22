@@ -79,6 +79,7 @@ Not an official Anthropic product.
 | `tools/test_selfcheck.py` | Tests for the hooks and the report (a fake `claude`, no model calls) |
 | `tools/check_no_personal_data.py`, `tools/install_hooks.py` | Git hooks that block personal data from commits (for contributors) |
 | `templates/` | Starting files for your private folder (listed in step 3 below) |
+| `docs/` | Images for this README |
 | `CONTRIBUTING.md`, `LICENSE` | How to contribute; MIT licence |
 
 ## Set it up (about 10 minutes)
@@ -142,7 +143,16 @@ Your folder will look like this:
 ## Self-check hooks (optional, Claude Code)
 
 The 🟣 line is the assistant marking its own work. These hooks add checks that don't depend on
-its word. One script, `tools/selfcheck.py`, runs at three moments:
+its word. A real example:
+
+![A real send-back: the reply's 🟣 line claimed both briefs were re-read; the hook sent it back, and the assistant read the missed file and fixed three gaps](docs/selfcheck-sendback-example.png)
+
+The reply's 🟣 line said both briefs were checked "line by line", but no tool run in that turn had
+read them. The after-reply check (#1923) asked the owner's likely question: "Did you actually re-read
+both briefs?" The assistant admitted it had skipped one, read it, and found and fixed three gaps,
+all before the owner read on or had to ask.
+
+One script, `tools/selfcheck.py`, runs at three moments:
 
 | When | What it does | Cost |
 |---|---|---|
