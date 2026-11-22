@@ -4,7 +4,7 @@ Use when: setting up (or copying to a new PC, team or AI tool) a folder of playb
 verified: 2026-10-24
 
 ## Quick steps
-1. Make a private knowledge-base folder; clone this repo into `core/` inside it; copy `core/templates/*` into the folder (`NO_PLAYBOOK.md`, `self-review-log.md`, `README.md`).
+1. Make a private knowledge-base folder; clone this repo into `core/` inside it; copy everything in `core/templates/` into the folder, hidden `.gitignore` and `.ignore` included (`core/README.md`, step 3, lists them).
 2. Every playbook (in the knowledge-base folder, not `core/`): line 1 `keywords: …` (many synonyms), then title, `Use when:`, `verified:`, ≤ 10 quick steps, ≤ 5 gotchas, blank line, `---`, details.
 3. Paste `core/CLAUDE-snippet.md` into the instructions every session loads (Claude Code: `~/.claude/CLAUDE.md`), with `<KB>` replaced by the folder path.
 4. Test from a fresh session: ask for a known task; it should find it with one search and read only the top.

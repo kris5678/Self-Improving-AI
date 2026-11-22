@@ -20,6 +20,7 @@ Sessions read a playbook only down to its first `---` line, so keep that top par
   keywords: <lowercase words and stems, plenty of synonyms; multi-word terms both ways: play-console play console>
   # <Title>
   Use when: <one line>
+  triggers: <optional: a regex for the tool calls that start this sub-task>
   verified: <YYYY-MM-DD, last time seen working>
 
   ## Quick steps
@@ -37,6 +38,13 @@ Sessions read a playbook only down to its first `---` line, so keep that top par
   line starting with `keywords:`.
 - Include short words (≤ 3 letters, e.g. `ipa`, `aab`) as they are; searches wrap them in
   `\b…\b` so they don't match inside longer words (`ipa` in `ipad`).
+- `triggers:` (optional, with the self-check hooks): a regular expression, case-insensitive, matched
+  against a Bash/PowerShell command (text written into a file doesn't count) or an MCP call as
+  `<tool name>` + newline + its input as JSON, e.g. `\bflutter\s+run\b` or `^mcp__claude-in-chrome__`.
+  The first matching call of a session is sent back once with "read this playbook first", unless the
+  session already used or named it. Add one whenever a session started this sub-task without the
+  playbook (a lapse): a rule in text didn't stop that, a check at the call does. Only for steps
+  with a clear command; keep it narrow (each match costs one extra round).
 - Leave a blank line before `---` (otherwise Markdown makes the line above a heading).
 - File name: descriptive, lowercase, hyphens (`ios-testflight-codemagic.md`).
 
@@ -63,6 +71,20 @@ Sessions read a playbook only down to its first `---` line, so keep that top par
 5. Add one line for it to the knowledge-base folder's `README.md` list (the owner's overview).
 6. Above ~50 playbooks: move them into category folders (`ios/`, `android/`, `stores/`,
    `flutter/`, `web/`, `tools/`); step 3 then reads only the relevant folder.
+
+## Changing `core/` itself
+
+Any change to `core/` (rules, playbooks, tools, templates, README) gets one entry, in the same
+turn, in `core-changes.md` in the knowledge-base folder (start it from
+`templates/core-changes.md`). The entry records:
+- **what** changed;
+- **why**: your request, a logged miss (case n), or a defect;
+- the **evidence**: tests, scores, a live run;
+- **how to undo** it;
+- **outcome: pending**. Reviews later mark it right, wrong or unclear.
+
+The trend report flags days on which `core/` changed but no entry was written (when a private
+`core/` history exists).
 
 ## Content rules
 

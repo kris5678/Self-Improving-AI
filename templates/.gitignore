@@ -4,3 +4,6 @@ core/
 # Rebuilt by core/tools/benchmark_summary.py on every run.
 self-review-trend.html
 __pycache__/
+# Self-check hooks: log, queue and session state hold chat text. Keep them local only.
+selfcheck/
+selfcheck-off

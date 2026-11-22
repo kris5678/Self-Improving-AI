@@ -3,7 +3,8 @@
 Read only when a real miss happened or a change to the self-review rules is proposed.
 Not a playbook (no keywords line). **Your data** — budget, cases, miss log — lives in your own
 `self-review-log.md` in the knowledge-base folder (one level above `core/`), never in this repo;
-start it from `templates/self-review-log.md`.
+start it from `templates/self-review-log.md` only if it doesn't exist yet (look in the knowledge-base folder
+itself first; never copy the template over a log).
 
 ## How to measure
 
@@ -26,7 +27,9 @@ start it from `templates/self-review-log.md`.
    owner to raise the budget, with the reason in the playbook's changelog.
 5. **Bias guard:** the session scoring its own change is biased. For a big change, run the cases
    with a fresh agent given only the old text, then only the new text (costs tokens: ask the
-   owner first), or let the owner spot-check two cases.
+   owner first), or let the owner spot-check two cases. For a hook change: replay the real
+   moments (the miss, plus controls that must pass) through the real hooks and checker, and read
+   each checker verdict, several runs each (it isn't deterministic).
 
 A "real miss" = the owner had to ask something the purposes should have caught, the
 `🟣 Self-check` line was missing or named nothing real, or the owner says "that's a miss"
@@ -52,8 +55,23 @@ a change of mind.
 - **Review** (when it says REVIEW DUE — 5 rows since the last review — or the owner asks "how is
   the self-review doing?"): read only the rows since the last review; report in a few lines:
   trend, gaps vs lapses, repeats, budget pressure, changes to keep or revert; then add a
-  `review` row with that summary.
+  `review` row with that summary. For each repeat, read in the transcript what the earlier fix's
+  hook did at that moment: it may have fired, but on another line (2026-11-22).
 - **Spot-check at each review:** the owner checks two cases, or (owner's OK, costs tokens) a
   fresh agent scores old vs new text, so scoring isn't only self-graded. Also check a few recent
   `🟣` lines: does each claim (`k/8`, `alt`, checks) match what was really done?
+- **Self-check hooks** (optional, `tools/selfcheck.py`, see the README) add evidence the session
+  doesn't grade itself:
+  - checks before building and after replies, each one logged with its input, answer, cost and
+    the owner's right/wrong rating;
+  - the weekly count of prompts where the owner still had to ask (check requests, doubt,
+    corrections).
+
+  At a review, compare "caught by the hooks" with "the owner still had to ask". Read the log
+  entries since the last review only.
+- **Core changes** (`core-changes.md` in the knowledge-base folder): at each review, set the
+  outcome of every `pending` entry old enough to judge:
+  - `right`: its misses went down, or its checks were rated right;
+  - `wrong`: a repeat, or more misses → revert using its Undo line;
+  - `unclear`.
 - Keep the log's columns as they are: the script reads them.

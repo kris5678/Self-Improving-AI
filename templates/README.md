@@ -6,6 +6,8 @@ Playbooks an AI assistant wrote after real tasks, so the next session can repeat
   lookup in my always-loaded instructions, and read a playbook only down to its first `---`.
 - The method (shared, public): `core/` — writing rules in `core/MAINTAINING.md`.
 - One-off tasks with no playbook: `NO_PLAYBOOK.md`. Self-review data: `self-review-log.md`.
+- Every change to the method, with why, evidence, undo and outcome: `core-changes.md`.
+- Optional self-check hooks: settings in `selfcheck-config.json`; off switch = an empty file `selfcheck-off`.
 - **Is the self-review getting better?** Run `core/tools/self-review-trend.bat` (Windows) or
   `core/tools/self-review-trend.sh`: it opens `self-review-trend.html`. History: `self-review-history.csv`.
 

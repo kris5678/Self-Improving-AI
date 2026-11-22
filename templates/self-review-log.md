@@ -1,5 +1,8 @@
 # Self-review log (your private data for core/self-review-benchmark.md)
 
+<!-- TEMPLATE: copy this to <knowledge-base>/self-review-log.md only if that file doesn't exist. Never copy it
+over an existing log: add rows to the real one. -->
+
 The rules for using this file are in `core/self-review-benchmark.md`. This file holds only your
 data: the budget, the cases and the miss log. `core/tools/benchmark_summary.py` reads it.
 Keep it in your private knowledge-base folder, never in the shared repo.

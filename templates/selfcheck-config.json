@@ -1,0 +1,19 @@
+{
+  "send_back": true,
+  "stop_checks": true,
+  "gate": true,
+  "independent_check": true,
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "exchanges": 2,
+  "check_timeout_seconds": 60,
+  "max_chars_per_message": 4000,
+  "presenting_min_words": 150,
+  "notes_to_session": true,
+  "playbook_reminder": true,
+  "playbook_after_risky_replies": 3,
+  "offer_check": true,
+  "playbook_triggers": true,
+  "question_check": true,
+  "review_reminder": true
+}

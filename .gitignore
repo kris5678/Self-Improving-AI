@@ -4,3 +4,7 @@ __pycache__/
 /self-review-log.md
 /self-review-history.csv
 /self-review-trend.html
+/selfcheck/
+/selfcheck-off
+/selfcheck-config.json
+/selfcheck-checker-prompt.md

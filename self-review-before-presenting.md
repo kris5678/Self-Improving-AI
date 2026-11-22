@@ -13,7 +13,7 @@ verified: not yet proven in a new session (created 2026-10-24; dry runs on itsel
 ## The purposes (why the owner asks what they ask)
 1. **Truth over belief** — would I bet on this? What evidence turns it into a fact?
 2. **Do no harm** — what that works today could this break? What could it cost the owner's business (stores, money, privacy, legal, reputation)?
-3. **Don't settle on the first answer (mine, the owner's, or one the owner approved)** — what would a better or cheaper way to reach the *goal* look like? Ask it **before starting work**, not only before presenting. An owner's proposal or "yes" settles *whether*, not *how*: improve it, don't only make it safe.
+3. **Don't settle on the first answer (mine, the owner's, or one the owner approved)** — what would a better or cheaper way to reach the *goal* look like? Ask it **before starting work**, not only before presenting, and **write it down before building**: one line `Decisions: goal <what it's for> · ways <different ways to reach that goal, not only ways to build the first idea> · alt: <the alternatives compared for each material choice of the chosen way>` (the optional gate in `tools/selfcheck.py` checks for it). An owner's proposal or "yes" settles *whether*, not *how*: improve it, don't only make it safe.
 4. **Plan for being wrong** — when it fails, who notices, and what does the miss cost vs a safeguard?
 5. **Stay healthy over time** — does it learn, clean up, and keep recurring costs low?
 6. **Outlive this session** — would someone with no memory find it, understand it and repeat it?
@@ -59,7 +59,9 @@ in the knowledge-base folder).
 3. Score old vs new on every case. Accept only if it fixes its trigger, no earlier case fails,
    and the global bullet doesn't grow. Otherwise keep the old version (the logged miss stays).
 4. Accepted: update the playbook and the global bullet together; changelog line with the
-   **old wording** (for a revert) and the score.
+   **old wording** (for a revert) and the score; an entry in the knowledge-base folder's
+   `core-changes.md` (why, evidence, undo, outcome pending). Reviews fill in each entry's
+   outcome (right / wrong / unclear) from the trend.
 5. When the owner confirms a `🟣 Self-check` line saved them a round, set `verified:` to that date.
 
 ## Where it came from (owner's prompts, 2026-10-24 → purpose)
@@ -106,3 +108,46 @@ Never edit the owner's list to match; link to it.
 - 2026-10-24 (owner's request, 3 passes on the trend tools): 14-day verdict windows with numbers,
   "rough / zero can mean nothing logged" note, budget read from the benchmark (note if not found),
   history file locked by Excel → report still updates with a note. Rules unchanged.
+- 2026-10-25 (owner's design): `tools/selfcheck.py` hooks check the work independently of the 🟣
+  line: a gate before the first risky change and before plan approval, free checks plus an
+  independent `claude -p` check after replies (sent back once), and counting of what the owner
+  still had to ask. Rules unchanged (global CLAUDE.md +0 words); 19 cases, 18 pass (case 19
+  waits for its rule change).
+- 2026-10-25 (owner approved): case 19 (repeat of 17, purposes 1 + 3).
+  - Purpose 3 now says: before building, write `Decisions: … · alt: …`. It's a visible line the
+    gate can check, the review's planned "list material decisions, alternatives for each".
+  - In the owner's global file, "Log every miss (I had to ask, or said "that's a miss")" became
+    "Log every miss.", since the prompt hook detects both and the benchmark defines a miss.
+    `CLAUDE-snippet.md` keeps the brackets, because users without the hooks need them.
+  - Old wording: "don't settle on the first answer (mine, yours or approved)"; "Log every miss (I
+    had to ask, or said "that's a miss")". Global file 699 → 698 words.
+  - Score: 19/19 (self-graded). Case 19's "read the source" half is purpose 1, so it counts as a
+    lapse there.
+- 2026-10-25 (owner approved): repeat of case 19 (case 21). The `Decisions` line was written, but
+  its alternatives were ways to build the first idea, not ways to reach the goal.
+  - Purpose 3's line is now `Decisions: goal … · ways … · alt: …`: naming the goal first makes
+    the compared ways start from it. The gate in `tools/selfcheck.py` now passes only a line with
+    goal and ways.
+  - To stay in budget, "guesses labelled as guesses" became "guesses labelled" (case 14 still
+    passes). Global file 698 → 700 words.
+  - Old wording: "before building, write "Decisions: … · alt: …"".
+  - Score: 20/21 (self-graded; case 20 waits for the owner).
+- 2026-10-25 (owner approved): case 22 (gap). Global file, under "Never decide for me": "Choices
+  the goal already answers aren't mine: decide them, say so in one line." The owner's heading
+  read like "ask about everything"; this line removes that conflict. No swap possible (the
+  section is the owner's wording), so the owner raised the budget 700 → 715 words. The selfcheck
+  offer check enforces it in every project. Score: 21/22 (case 20 waits until it repeats).
+- 2026-10-31 (owner approved, review of 9 misses): case 24 (repeat of the 10-29 plan-review lapse).
+  - Global file: "Plans: before asking for approval, walk each step through the code it changes and
+    include:"; to stay at 715 words, "problems found in your draft" and "what's fixed and what's left".
+  - Old wording: "review the plan yourself and include:", "problems you found in your own draft;",
+    "what is fixed and what is left." Global file 715 → 715 words.
+  - Checker prompt (private `selfcheck-checker-prompt.md`): a plan or fix list whose self-review names
+    no code it was checked against gets the question "was each step walked through the actual code?".
+  - Score: 23/24 (self-graded; case 20 still waits).
+- 2026-11-22 (owner approved, review of 26 misses since 11-12): rules text unchanged except one owner line in
+  the global file ("Suggest what to do next, but never start a task I didn't ask for…", +30 words, owner's
+  request; over budget: 1305 / 715; the owner declined merging the store sections (−176), keep them). Lapses fixed by hooks, not wording: playbook `triggers:` (case 27), question check + checker lines
+  (cases 28, 29), log guard + shrink warning (the 11-12 log overwrite), daily review suggestion (owner goal: a
+  self-improving loop that never starts tasks unasked). Score: 23/24 old cases unchanged (case 20 waits);
+  cases 25–35 logged, hooks judged by replay (core-changes 2026-11-22).

@@ -15,6 +15,7 @@ import datetime
 import html
 import pathlib
 import re
+import subprocess
 import sys
 from collections import Counter
 
@@ -54,6 +55,44 @@ def count_cases(text):
         if in_cases and re.match(r"^\|\s*\d+\s*\|", line):
             n += 1
     return n
+
+
+def core_change_gaps(kb):
+    """Days on which core/ changed (private history .core-backup.git) without a core-changes.md entry.
+
+    Optional: an empty list when there is no private history, no change log, or no git."""
+    git_dir, changes = kb / ".core-backup.git", kb / "core-changes.md"
+    if not git_dir.is_dir() or not changes.exists():
+        return []
+    try:
+        out = subprocess.run(["git", f"--git-dir={git_dir}", "log", "--format=%ad", "--date=short"],
+                             capture_output=True, timeout=30, check=True).stdout.decode()
+    except (OSError, subprocess.SubprocessError):
+        return []
+    logged = set(re.findall(r"^###\s*(\d{4}-\d{2}-\d{2})", changes.read_text(encoding="utf-8"), re.M))
+    changed = sorted(set(out.split()))
+    # The first backup copies everything that already existed: not a change of that day.
+    return [d for d in changed[1:] if d not in logged] if len(changed) > 1 else []
+
+
+def shrink_note(history, snapshot):
+    """The log lost rows or cases since the last snapshot of an earlier day: a session may have written over it
+    (2026-11-12: a template copied over the real log went unnoticed for 10 days). '' when nothing shrank."""
+    if not history:
+        return ""
+    prev = history[-1]
+    lost = []
+    for key, label in (("misses_total", "misses"), ("cases", "cases")):
+        try:
+            before, now = int(prev.get(key) or 0), int(snapshot[key])
+        except (TypeError, ValueError):
+            continue
+        if now < before:
+            lost.append(f"{label} {before} -> {now}")  # plain ASCII: Windows consoles
+    if not lost:
+        return ""
+    return (f"WARNING: the miss log shrank since {prev.get('date')} ({', '.join(lost)}): it may have been written "
+            "over. Restore the missing rows from the knowledge base's git history before anything else.")
 
 
 def week_start(d):
@@ -125,6 +164,9 @@ def main():
         if HISTORY.exists():
             with HISTORY.open(encoding="utf-8", newline="") as f:
                 history = [r for r in csv.DictReader(f) if r.get("date") != snapshot["date"]]
+        shrank = shrink_note(history, snapshot)
+        if shrank:
+            notes.insert(0, shrank)
         history.append({k: str(v) for k, v in snapshot.items()})
         with HISTORY.open("w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=FIELDS)
@@ -134,9 +176,22 @@ def main():
         # Excel locks an open CSV: keep going, the report still updates.
         notes.append(f"History not saved: close {HISTORY.name} (open in Excel?) and run again.")
 
+    missing_entries = core_change_gaps(path.parent)
+    if missing_entries:
+        notes.append("core/ changed with no entry in core-changes.md on: " + ", ".join(missing_entries))
+
+    # Self-check hooks (selfcheck.py): never let them break this report.
+    try:
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))  # -I leaves this folder out
+        import selfcheck
+        checks = selfcheck.summary()
+    except Exception as exc:
+        checks = {}
+        notes.append(f"Self-check numbers not read: {exc}")
+
     try:
         write_report(today, verdict, by_type, since, weekly, global_words, budget_words, cases,
-                     history, bad_dates, notes)
+                     history, bad_dates, notes, checks)
     except PermissionError:
         notes.append(f"Report not saved: {REPORT.name} is locked.")
     for note in notes:
@@ -153,12 +208,73 @@ def main():
         print("WARNING: repeats found - a fix failed; check them first.")
     if since >= REVIEW_EVERY:
         print("REVIEW DUE")
+    if checks:
+        print(f"Self-check ({checks['days']} days): {checks['checks']} checks, {checks['sent_back']} sent back, "
+              f"{checks['blocked']} blocked, {checks['failed']} failed"
+              + (f" | NOT RUNNING: {', '.join(checks['stale'])}" if checks["stale"] and not checks["off"] else "")
+              + (" | turned OFF" if checks["off"] else "")
+              + (f" | hook errors: {checks['errors']}" if checks["errors"] else ""))
     print("Report for the owner:", REPORT)
     return 0
 
 
+def checks_section(c):
+    """Self-check hooks: what ran, what it cost, how often it was right, prompts that still slipped."""
+    e = html.escape
+    if not c:
+        return ""
+    warn = ""
+    if c["off"]:
+        warn = "<p class='verdict' style='color:#555'>Self-check is turned OFF (selfcheck-off file).</p>"
+    elif c["stale"]:
+        warn = (f"<p class='verdict' style='color:#c62828'>Not running for 2+ days: {e(', '.join(c['stale']))} "
+                "(check python and the hooks in settings.json).</p>")
+    rows = "".join(
+        f"<li><b>{e(k)}</b>: {s['runs']} runs · flagged {s['flagged']} · failed {s['failed']} · "
+        f"avg {s['seconds'] / max(s['runs'], 1):.1f} s · avg {s['tokens'] // max(s['runs'], 1)} tokens · "
+        f"your ratings: right {s['right']}, wrong {s['wrong']} · possible false pass {s['possible false pass']}</li>"
+        for k, s in c["by_setting"].items()) or "<li>No independent checks yet.</li>"
+    weeks = list(c["weekly"].items())[-12:]
+    week_rows = "".join(
+        f"<tr><td>{w}</td><td>{r['check-request']}</td><td>{r['doubt']}</td><td>{r['correction']}</td>"
+        f"<td>{r['miss']}</td></tr>" for w, r in reversed(weeks))
+    pre = "style='white-space:pre-wrap;word-break:break-word;font-size:.8em;background:#f5f5f5;padding:8px'"
+    recent = "".join(
+        f"<details><summary><b>#{r['id']}</b> {e(str(r['time'] or ''))} · {e(str(r['stage'] or ''))} · "
+        f"<b>{e(str(r['verdict'] or ''))}</b>"
+        + (f" · rated <b>{e(r['rating'])}</b>" if r.get("rating") else "")
+        + (f"<br>❓ {e(r['question'])}" if r.get("question") else "")
+        + "</summary>"
+        f"<p class='muted'>project {e(str(r['project']))} · why checked: {e(', '.join(map(str, r['why'])) or '—')}"
+        + (f" · free checks: {e('; '.join(r['free']))}" if r["free"] else "")
+        + (f" · change: {e(str(r['tool']))}" if r.get("tool") else "")
+        + (f"<br>independent check: {e(str(r['model']))} · effort {e(str(r['effort']))} · "
+           f"{e(str(r['exchanges']))} exchanges · {r['seconds']} s · {r['tokens']} tokens"
+           + (f" · error: {e(str(r['error']))}" if r.get("error") else "") if r.get("model") else
+           "<br>no independent check (free checks only)")
+        + "</p>"
+        + (f"<p><b>What it received</b></p><pre {pre}>{e(r['input'])}</pre>" if r.get("input") else "")
+        + (f"<p><b>What it answered</b></p><pre {pre}>{e(str(r['answer']))}</pre>" if r.get("answer") else "")
+        + (f"<p><b>The follow-up reply</b></p><pre {pre}>{e(str(r['follow_up']))}</pre>" if r.get("follow_up") else "")
+        + "</details>"
+        for r in c.get("recent", [])) or "<p>No checks yet.</p>"
+    return (f"<h2>Self-check hooks (last {c['days']} days)</h2>{warn}"
+            f"<p>{c['checks']} checks · {c['sent_back']} sent back after a reply · {c['blocked']} blocked "
+            f"before building · {c['failed']} checks failed · hook errors {c['errors']}</p>"
+            f"<p class='muted'>Independent check, per setting (all time). Rate a check by saying "
+            f"“#12 was right/wrong”.</p><ul>{rows}</ul>"
+            "<h2>Recent checks (newest first, last 50)</h2>"
+            "<p class='muted'>Tap a check to see exactly what the independent check received and answered.</p>"
+            f"{recent}"
+            "<h2>What you still had to ask (prompts per week)</h2>"
+            "<p class='muted'>Fewer = the checks catch more before you have to ask. Includes your prompt "
+            "history from before the hooks.</p>"
+            "<table><tr><th>Week</th><th>check requests</th><th>doubt</th><th>corrections</th><th>“that's a miss”</th>"
+            f"</tr>{week_rows}</table>")
+
+
 def write_report(today, verdict, by_type, since, weekly, global_words, budget_words, cases,
-                 history, bad_dates, notes):
+                 history, bad_dates, notes, checks=None):
     e = html.escape
     top = max([n for _, n in weekly] + [1])
     colour = "#2e7d32" if verdict.startswith("BETTER") else (
@@ -189,6 +305,7 @@ and the amount of work done isn't counted. Zero misses can also mean nothing was
 since last review {since} (review every {REVIEW_EVERY}) · cases {cases} · global CLAUDE.md {e(budget)}
 {' · unreadable dates: ' + str(bad_dates) if bad_dates else ''}</p>
 <h2>Misses per week (week starting)</h2><table>{bars}</table>
+{checks_section(checks)}
 <h2>History (one snapshot per day the script ran)</h2>
 <table><tr>{''.join(f'<th>{e(k)}</th>' for k in FIELDS)}</tr>{hist}</table>
 <p class="muted">gap = no rule covered it · lapse = a rule existed but wasn't followed · repeat = it came back after its fix.</p>
